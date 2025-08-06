@@ -1,0 +1,18 @@
+METRICS COMPARISON SUMMARY
+==================================================
+
+KEY FINDINGS:
+- CLIP Similarity Change: +0.060
+- Diversity Ratio: 1.24x
+- Quality Improvement: +0.020
+
+BASELINE RESULTS:
+- CLIP Similarity: 0.680
+- Diversity: 0.340
+- Sharpness: 0.710
+
+ZEROPRI RESULTS:
+- CLIP Similarity: 0.740
+- Diversity: 0.420
+- Sharpness: 0.730
+

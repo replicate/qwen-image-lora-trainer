@@ -1,0 +1,7 @@
+MOCK COMPARISON 1
+==============================
+
+Baseline prompt: a photo of a person
+Zero-prior prompt: a photo of <zwx>
+
+Note: Actual experiment images would be displayed here

@@ -1,0 +1,72 @@
+# Common hyperparameters for controlled zero-prior token experiments
+# All parameters matched between baseline and zero-prior training
+
+training:
+  steps: 200                    # Increased for better convergence
+  batch_size: 1                 # Memory-constrained but consistent
+  learning_rate: 5e-5           # Conservative learning rate
+  save_every: 50                # Regular checkpoints
+  
+  # LoRA configuration
+  rank: 32                      # Balanced capacity vs efficiency  
+  alpha: 32                     # Standard alpha = rank
+  dropout: 0.1                  # Moderate regularization
+  
+  # Optimization
+  optimizer: "adamw"            # Standard optimizer
+  lr_scheduler: "cosine"        # Smooth learning rate decay
+  warmup_steps: 20              # 10% of total steps
+  
+  # Regularization
+  gradient_clip_norm: 1.0       # Prevent exploding gradients
+  weight_decay: 0.01            # L2 regularization
+
+data:
+  resolution: 512               # Standard resolution
+  center_crop: true            # Consistent preprocessing
+  random_flip: false           # Disable for reproducibility
+  
+model:
+  base_model: "Qwen/Qwen-Image"
+  mixed_precision: "bf16"       # Memory efficiency
+  
+  # Zero-prior specific (only used when enabled)
+  placeholder_token: "<zwx>"
+  placeholder_init_std: 1e-5    # Near-zero initialization
+  
+system:
+  seed: 42                      # Deterministic results
+  compile: false                # Disable for compatibility
+  gradient_checkpointing: true  # Memory optimization
+  
+experiment:
+  # Fixed settings for controlled comparison
+  prompt_templates:
+    - "a photo of {}"
+    - "a portrait of {}"
+    - "a close-up of {}"
+    - "{} in natural lighting"
+    - "a professional photo of {}"
+  
+  inference_params:
+    num_inference_steps: 20     # Fast but decent quality
+    guidance_scale: 7.5         # Standard guidance
+    width: 512
+    height: 512
+    seed: 42                    # Reproducible generation
+    
+  # Evaluation prompts (matched between baseline/zero-prior)
+  eval_prompts:
+    baseline:
+      - "a photo of a person"
+      - "a portrait of the subject" 
+      - "a close-up of an individual"
+      - "someone in natural lighting"
+      - "a professional photo of the person in the photo"
+    
+    zeropri:
+      - "a photo of <zwx>"
+      - "a portrait of <zwx>"
+      - "a close-up of <zwx>" 
+      - "<zwx> in natural lighting"
+      - "a professional photo of <zwx>"

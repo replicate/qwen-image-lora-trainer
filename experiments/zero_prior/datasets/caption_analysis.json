@@ -1,0 +1,87 @@
+{
+  "dataset": "me-test-dataset.zip",
+  "placeholder_token": "<zwx>",
+  "baseline_stats": {
+    "total_captions": 36,
+    "unique_captions": 25,
+    "avg_length": 5.694444444444445,
+    "template_distribution": {
+      "a photo of X": 6,
+      "someone in casual setting": 1,
+      "the subject smiling": 2,
+      "a professional photo of X": 4,
+      "an individual looking at camera": 1,
+      "a person in natural lighting": 1,
+      "an individual in natural lighting": 1,
+      "a portrait of X": 5,
+      "an image of X": 5,
+      "the person in the photo in casual setting": 1,
+      "the person in the photo smiling": 1,
+      "a close-up of X": 2,
+      "someone smiling": 1,
+      "an individual smiling": 1,
+      "an individual in casual setting": 1,
+      "a person in casual setting": 1,
+      "a candid shot of X": 1,
+      "the subject in casual setting": 1
+    },
+    "sample_captions": [
+      "a photo of the subject",
+      "someone in casual setting",
+      "the subject smiling",
+      "a professional photo of the subject",
+      "an individual looking at camera"
+    ]
+  },
+  "zeropri_stats": {
+    "total_captions": 36,
+    "unique_captions": 10,
+    "avg_length": 3.861111111111111,
+    "template_distribution": {
+      "a photo of X": 6,
+      "<zwx> in casual setting": 5,
+      "<zwx> smiling": 5,
+      "a professional photo of X": 4,
+      "<zwx> looking at camera": 1,
+      "<zwx> in natural lighting": 2,
+      "a portrait of X": 5,
+      "an image of X": 5,
+      "a close-up of X": 2,
+      "a candid shot of X": 1
+    },
+    "sample_captions": [
+      "a photo of <zwx>",
+      "<zwx> in casual setting",
+      "<zwx> smiling",
+      "a professional photo of <zwx>",
+      "<zwx> looking at camera"
+    ]
+  },
+  "sample_comparisons": [
+    {
+      "image": "me-1.jpg",
+      "baseline_caption": "a photo of the subject",
+      "zeropri_caption": "a photo of <zwx>"
+    },
+    {
+      "image": "me-10.jpg",
+      "baseline_caption": "someone in casual setting",
+      "zeropri_caption": "<zwx> in casual setting"
+    },
+    {
+      "image": "me-11.jpg",
+      "baseline_caption": "the subject smiling",
+      "zeropri_caption": "<zwx> smiling"
+    },
+    {
+      "image": "me-12.jpg",
+      "baseline_caption": "a professional photo of the subject",
+      "zeropri_caption": "a professional photo of <zwx>"
+    },
+    {
+      "image": "me-13.jpg",
+      "baseline_caption": "an individual looking at camera",
+      "zeropri_caption": "<zwx> looking at camera"
+    }
+  ]
+}

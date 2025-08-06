@@ -1,0 +1,7 @@
+MOCK COMPARISON 3
+==============================
+
+Baseline prompt: a close-up of an individual
+Zero-prior prompt: a close-up of <zwx>
+
+Note: Actual experiment images would be displayed here

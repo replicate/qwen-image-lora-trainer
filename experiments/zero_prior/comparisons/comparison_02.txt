@@ -1,0 +1,7 @@
+MOCK COMPARISON 2
+==============================
+
+Baseline prompt: a portrait of the subject
+Zero-prior prompt: a portrait of <zwx>
+
+Note: Actual experiment images would be displayed here
