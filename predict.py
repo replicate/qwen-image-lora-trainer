@@ -116,7 +116,7 @@ class Predictor(BasePredictor):
     def predict(
         self,
         prompt: str = Input(description="Text prompt for image generation", default="a photo of <zwx>"),
-        replicate_weights: Path = Input(description="Zip/tar with lora.safetensors from training"),
+        replicate_weights: Optional[Path] = Input(description="Zip/tar with lora.safetensors from training", default=None),
         negative_prompt: str = Input(description="Negative prompt", default=""),
         steps: int = Input(description="Number of inference steps", default=20, ge=1, le=50),
         width: int = Input(description="Width of output image", default=1024, ge=256, le=1024),

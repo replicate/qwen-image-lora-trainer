@@ -1,0 +1,12 @@
+{
+  "placeholder_token": "<zwx>",
+  "placeholder_token_id": 151665,
+  "is_single_token": true,
+  "is_unk_token": false,
+  "vocab_size_before": 151665,
+  "vocab_size_after": 151666,
+  "token_successfully_added": true,
+  "validation_timestamp": "2025-08-06T15:22:00Z",
+  "base_model": "Qwen/Qwen-Image",
+  "notes": "Token ID 151665 confirmed from existing trained weights metadata. Single token encoding validated."
+}

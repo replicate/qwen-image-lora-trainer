@@ -125,7 +125,7 @@ def train(
                         "gradient_accumulation_steps": 1,
                         "train_unet": True,
                         "train_text_encoder": False,
-                        "gradient_checkpointing": False,
+                        "gradient_checkpointing": True,
                         "noise_scheduler": "flowmatch",
                         "optimizer": "adamw8bit",
                         "lr": learning_rate,
@@ -145,9 +145,9 @@ def train(
                     "model": {
                         "name_or_path": "Qwen/Qwen-Image",
                         "arch": "qwen_image",
-                        "quantize": False,
-                        "quantize_te": False,
-                        "low_vram": False
+                        "quantize": True,
+                        "quantize_te": True,
+                        "low_vram": True
                     },
                     "sample": {
                         "sampler": "flowmatch",
@@ -187,7 +187,18 @@ def train(
         # Change to ai-toolkit directory and run training
         ai_toolkit_dir = P(__file__).parent / "ai-toolkit"
         if not ai_toolkit_dir.exists():
-            raise RuntimeError("ai-toolkit directory not found. Make sure submodule is initialized.")
+            raise RuntimeError(
+                "ai-toolkit directory not found. Make sure submodule is initialized with:\n"
+                "git submodule update --init --recursive"
+            )
+        
+        # Verify ai-toolkit run.py exists
+        run_py_path = ai_toolkit_dir / "run.py"
+        if not run_py_path.exists():
+            raise RuntimeError(
+                f"ai-toolkit/run.py not found at {run_py_path}. "
+                "Check ai-toolkit submodule initialization."
+            )
         
         # Run the training command
         cmd = [

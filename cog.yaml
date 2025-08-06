@@ -1,27 +1,29 @@
 build:
   # Base image with CUDA support
   gpu: true
-  cuda: "12.1"
-  python_version: "3.11"
+  cuda: "12.6"
+  python_version: "3.10"
   
-  # System packages
+  # System packages (minimal for Ubuntu 24.04 base)
   system_packages:
-    - "libgl1-mesa-glx"
-    - "libglib2.0-0"
-    - "libsm6"
-    - "libxext6"
-    - "libxrender-dev"
+    - "libgl1-mesa-dri"
+    - "libxrender1"
     - "libgomp1"
     - "git"
     - "git-lfs"
+    - "libglib2.0-0"
+    - "libsm6"
+    - "libxext6"
   
-  # Python requirements (using requirements.txt for pinned versions)
-  python_requirements: requirements.txt
-    
-  # Build commands to set up the environment
+  # Install all dependencies including torch from requirements.txt
+  python_requirements: "requirements.txt"
+  
+  # Caching environment variables for faster model downloads
   run:
-    # Install additional requirements if needed
-    - "pip install oyaml"
+    - "export HF_HUB_ENABLE_HF_TRANSFER=1"
+    - "export HF_HOME=/root/.cache/hf"
+    - "export TRANSFORMERS_CACHE=/root/.cache/hf/transformers"
+    - "export TORCH_HOME=/root/.cache/torch"
 
 # Specify the training and prediction entry points
 train: "train.py:train"

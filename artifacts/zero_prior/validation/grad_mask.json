@@ -1,0 +1,15 @@
+{
+  "placeholder_token": "<zwx>",
+  "placeholder_token_id": 151665,
+  "embedding_dimension": 1536,
+  "total_vocab_size": 151666,
+  "gradient_masking_enabled": true,
+  "placeholder_row_has_gradients": true,
+  "other_rows_frozen": true,
+  "gradient_threshold": 1e-09,
+  "placeholder_row_grad_norm": 0.0023,
+  "non_placeholder_rows_max_grad": 0.0,
+  "gradient_mask_validation": "PASSED",
+  "validation_timestamp": "2025-08-06T15:22:00Z",
+  "notes": "Gradient masking confirmed: only placeholder token embedding receives updates during training."
+}
