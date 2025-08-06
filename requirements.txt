@@ -1,47 +1,15 @@
-# Core ML packages with pinned versions for reproducibility
-torch>=2.1.0
-torchvision>=0.16.0
-torchaudio>=2.1.0
-xformers>=0.0.22
-numpy<2  # Pin to avoid v2 compatibility issues
+# Torch stack (minimal pins for Cog version detection)
+torch==2.7.0
+torchvision==0.22.0
+torchaudio
 
-# Diffusion and transformers
-diffusers>=0.24.0
-transformers>=4.35.0
-accelerate>=0.24.0
-peft>=0.6.0
-
-# Image and data processing
-pillow>=10.0.0
-opencv-python>=4.8.0
-scipy>=1.11.0
-einops>=0.7.0
-albumentations>=1.3.0
-kornia>=0.6.0
-timm>=0.9.0
-
-# Configuration and utilities
-pydantic>=2.0.0
-pyyaml>=6.0
-tqdm>=4.65.0
-omegaconf>=2.3.0
-toml>=0.10.0
-python-slugify>=8.0.0
-
-# Serialization and HuggingFace
-safetensors>=0.4.0
-huggingface-hub>=0.17.0
-datasets>=2.14.0
-
-# Additional ai-toolkit dependencies
-oyaml>=1.0
-wandb>=0.15.0
-tensorboard>=2.14.0
-jsonschema>=4.17.0
-
-# Optimization libraries
-bitsandbytes>=0.41.0
-optimum>=1.14.0
-
-# Additional dependencies that may be needed by ai-toolkit (relaxed versions)
-lpips>=0.1.4
+# Core stack
+diffusers
+transformers==4.52.4
+accelerate
+peft
+safetensors
+huggingface-hub
+tokenizers
+omegaconf
+numpy<2.0

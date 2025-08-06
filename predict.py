@@ -14,6 +14,7 @@ Note: This implementation uses ai-toolkit's QwenImageModel for full compatibilit
 
 import json
 import os
+import shutil
 import sys
 import tempfile
 import zipfile
@@ -28,18 +29,29 @@ from PIL import Image
 # Add ai-toolkit to Python path
 sys.path.insert(0, '/src/ai-toolkit')
 
-# Import from ai-toolkit
+# Import from ai-toolkit - FAIL FAST if not available
 try:
     from extensions_built_in.diffusion_models.qwen_image.qwen_image import QwenImageModel
     from toolkit.config_modules import ModelConfig, GenerateImageConfig, TrainConfig, DebugConfig
     from toolkit.prompt_utils import PromptEmbeds
     import safetensors.torch
     AITOOLKIT_AVAILABLE = True
+    print("✅ ai-toolkit modules imported successfully")
 except ImportError as e:
-    print(f"Warning: Could not import ai-toolkit modules: {e}")
-    print("Falling back to placeholder implementation")
-    QwenImageModel = None
     AITOOLKIT_AVAILABLE = False
+    # Hard fail unless explicitly allowed
+    if os.getenv("ALLOW_PLACEHOLDER", "false").lower() != "true":
+        print(f"❌ FATAL: ai-toolkit/Qwen-Image backend not available: {e}")
+        print("Check torch/CUDA/optimum-quanto pins and Docker base.")
+        print("Set ALLOW_PLACEHOLDER=true only for development testing.")
+        raise RuntimeError(
+            f"ai-toolkit/Qwen-Image backend not available: {e}. "
+            "Check torch/CUDA/optimum-quanto pins and Docker base."
+        )
+    else:
+        print(f"Warning: Could not import ai-toolkit modules: {e}")
+        print("ALLOW_PLACEHOLDER=true, using placeholder implementation")
+        QwenImageModel = None
 
 
 class Predictor(BasePredictor):
@@ -53,15 +65,24 @@ class Predictor(BasePredictor):
         self.dtype = torch.bfloat16
         
         if not AITOOLKIT_AVAILABLE:
-            print("⚠️  ai-toolkit not available, using placeholder implementation")
-            self.qwen_model = None
-            return
+            if os.getenv("ALLOW_PLACEHOLDER", "false").lower() == "true":
+                print("⚠️  ai-toolkit not available, using placeholder implementation")
+                self.qwen_model = None
+                return
+            else:
+                raise RuntimeError(
+                    "ai-toolkit/Qwen-Image backend not available. "
+                    "Check torch/CUDA/optimum-quanto pins and Docker base."
+                )
         
-        # Create model config for base Qwen-Image
+        # Create model config for base Qwen-Image with quantization for memory efficiency
         model_config = ModelConfig(
             name_or_path="Qwen/Qwen-Image",
             arch="qwen_image",
-            dtype=self.dtype
+            dtype=self.dtype,
+            quantize=True,
+            quantize_te=True,
+            low_vram=True
         )
         
         # Create train config (for compatibility)
@@ -81,6 +102,8 @@ class Predictor(BasePredictor):
                 train_config=train_config,
                 debug_config=debug_config
             )
+            # Load all model components (transformer, VAE, text encoder, etc.)
+            self.qwen_model.load_model()
             print("✅ Base Qwen-Image model loaded successfully")
         except Exception as e:
             print(f"❌ Failed to load Qwen-Image model: {e}")
@@ -105,13 +128,18 @@ class Predictor(BasePredictor):
             description="Override placeholder token (if different from metadata)", 
             default=None
         ),
+        output_dir: Optional[str] = Input(
+            description="Directory to save output image (optional)", 
+            default=None
+        ),
     ) -> Path:
         """Generate image from text prompt using trained LoRA weights"""
         
         if not AITOOLKIT_AVAILABLE or self.qwen_model is None:
-            # Fallback implementation for testing
-            print("⚠️  Using placeholder implementation")
-            return self._generate_placeholder_image(prompt, width, height, seed)
+            raise RuntimeError(
+                "ai-toolkit/Qwen-Image backend not available. "
+                "Cannot generate real images without ai-toolkit."
+            )
         
         print(f"🎨 Generating image with prompt: '{prompt}'")
         print(f"📦 Using weights: {replicate_weights}")
@@ -139,15 +167,15 @@ class Predictor(BasePredictor):
                 height=height,
                 steps=steps,
                 guidance_scale=guidance_scale,
-                seed=seed
+                seed=seed,
+                output_dir=output_dir
             )
             
             return output_path
             
         except Exception as e:
             print(f"❌ Generation failed: {e}")
-            # Return placeholder on error
-            return self._generate_placeholder_image(f"Error: {str(e)}", width, height, seed)
+            raise RuntimeError(f"Generation failed: {e}")
     
     def _extract_weights_archive(self, archive_path: Path) -> P:
         """Extract weights archive and return the extraction directory"""
@@ -246,7 +274,7 @@ class Predictor(BasePredictor):
             raise RuntimeError(f"Failed to load LoRA weights: {e}")
     
     def _generate_image(self, prompt: str, negative_prompt: str, width: int, height: int, 
-                       steps: int, guidance_scale: float, seed: int) -> Path:
+                       steps: int, guidance_scale: float, seed: int, output_dir: Optional[str] = None) -> Path:
         """Generate image using the loaded model and LoRA"""
         
         print(f"🎨 Generating {width}x{height} image with {steps} steps, guidance {guidance_scale}")
@@ -257,17 +285,42 @@ class Predictor(BasePredictor):
             if torch.cuda.is_available():
                 torch.cuda.manual_seed(seed)
             
-            # Use the model's generation pipeline
-            # This is simplified - in practice, you'd use the QwenImageModel's generate methods
+            # Use provided output_dir or create temporary one
+            if output_dir:
+                output_path_obj = P(output_dir)
+                output_path_obj.mkdir(parents=True, exist_ok=True)
+            else:
+                output_path_obj = P(tempfile.mkdtemp(prefix="qwen_output_"))
             
-            # For now, create a simple placeholder image with the prompt info
-            output_path = self._generate_placeholder_image(prompt, width, height, seed)
+            # Create generate config using constructor parameters
+            generate_config = GenerateImageConfig(
+                prompt=prompt,
+                negative_prompt=negative_prompt or "",
+                width=width,
+                height=height,
+                guidance_scale=guidance_scale,
+                num_inference_steps=steps,
+                seed=seed,
+                output_folder=str(output_path_obj),
+                output_ext="png"
+            )
             
-            print(f"✅ Generated image saved to {output_path}")
-            return output_path
+            # Use the model's generate_images method (which expects a list)
+            self.qwen_model.generate_images([generate_config])
+            
+            # Find the generated image in the output directory
+            generated_files = list(output_path_obj.glob("*.png"))
+            if generated_files:
+                generated_file = generated_files[0]  # Take the first PNG file
+                print(f"✅ Generated image saved to {generated_file}")
+                return Path(str(generated_file))
+            else:
+                raise RuntimeError(f"No generated images found in {output_path_obj}")
             
         except Exception as e:
-            raise RuntimeError(f"Failed to generate image: {e}")
+            print(f"⚠ Generation failed with ai-toolkit, error: {e}")
+            # Re-raise exception instead of placeholder
+            raise RuntimeError(f"Generation Error: {str(e)}")
     
     def _generate_placeholder_image(self, prompt: str, width: int, height: int, seed: int) -> Path:
         """Generate a placeholder image for testing/fallback"""
