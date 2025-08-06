@@ -3,8 +3,8 @@ torch==2.7.0
 torchvision==0.22.0
 torchaudio
 
-# Core stack
-diffusers
+# Core stack  
+git+https://github.com/huggingface/diffusers@7ea065c5070a5278259e6f1effa9dccea232e62a
 transformers==4.52.4
 accelerate
 peft
@@ -13,3 +13,18 @@ huggingface-hub
 tokenizers
 omegaconf
 numpy<2.0
+
+# ai-toolkit required dependencies
+einops
+pillow
+datasets
+optimum-quanto
+lycoris-lora
+k-diffusion
+opencv-python
+lpips
+torchao
+bitsandbytes
+albumentations
+timm
+kornia
