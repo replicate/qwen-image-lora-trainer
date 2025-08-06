@@ -1,0 +1,70 @@
+---
+job: extension
+config:
+  name: "qwen_lora_placeholder_v1"
+  process:
+    - type: 'sd_trainer'
+      training_folder: "output"
+      device: cuda:0
+      network:
+        type: "lora"
+        linear: 64
+        linear_alpha: 128
+      save:
+        dtype: float16
+        save_every: 2000
+        max_step_saves_to_keep: 4
+        push_to_hub: false
+      datasets:
+        - folder_path: "./zeke"
+          caption_ext: "txt"
+          caption_dropout_rate: 0.00
+          shuffle_tokens: false
+          cache_latents_to_disk: true
+          resolution: [512, 768, 1024]
+      train:
+        batch_size: 1
+        steps: 4000
+        gradient_accumulation_steps: 1
+        train_unet: true
+        train_text_encoder: false
+        gradient_checkpointing: false
+        noise_scheduler: "flowmatch"
+        optimizer: "adamw8bit"
+        lr: 1e-4
+        dtype: bf16
+        ema_config:
+          use_ema: true
+          ema_decay: 0.99
+        
+        # Zero-prior placeholder token training (opt-in)
+        train_placeholder_token: true      # Enable the feature
+        placeholder_token: "<zwx>"         # Use angle brackets for single token encoding
+        placeholder_init_std: 1e-5         # Near-zero initialization standard deviation
+        
+      debug:
+        log_prompt_ids: false              # Enable for debugging prompt tokenization
+        
+      model:
+        name_or_path: "Qwen/Qwen-Image"
+        arch: "qwen_image"
+        quantize: false
+        quantize_te: false                 # Automatically disabled if train_placeholder_token=true
+        low_vram: false
+      sample:
+        sampler: "flowmatch"
+        sample_every: 250
+        width: 1024
+        height: 1024
+        prompts:
+          - "a photo of <zwx>"             # Use placeholder token in prompts
+          - "a portrait of <zwx> smiling"
+          - "<zwx> in a garden"
+          - "beautiful <zwx> at sunset"
+        seed: 42
+        walk_seed: true
+        guidance_scale: 4
+        sample_steps: 20
+meta:
+  name: "[name]"
+  version: '1.0'

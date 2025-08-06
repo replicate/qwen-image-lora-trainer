@@ -1,0 +1,76 @@
+build:
+  # Base image with CUDA support
+  gpu: true
+  cuda: "12.1"
+  python_version: "3.11"
+  
+  # System packages
+  system_packages:
+    - "libgl1-mesa-glx"
+    - "libglib2.0-0"
+    - "libsm6"
+    - "libxext6"
+    - "libxrender-dev"
+    - "libgomp1"
+    - "git"
+    - "git-lfs"
+  
+  # Python packages
+  python_packages:
+    # Core ML packages
+    - "torch>=2.1.0"
+    - "torchvision>=0.16.0"
+    - "torchaudio>=2.1.0"
+    - "xformers>=0.0.22"
+    - "numpy<2"  # Fix NumPy compatibility
+    
+    # Use standard diffusers for now (Cog interface will use ai-toolkit directly)
+    - "diffusers>=0.24.0"
+    - "transformers>=4.35.0"
+    - "accelerate>=0.24.0"
+    - "peft>=0.6.0"
+    
+    # Image and data handling
+    - "pillow>=10.0.0"
+    - "opencv-python>=4.8.0"
+    - "numpy<2"  # Fix NumPy compatibility
+    - "scipy>=1.11.0"
+    - "einops>=0.7.0"  # Required by ai-toolkit
+    - "albumentations>=1.3.0"  # Required by ai-toolkit data loader
+    - "kornia>=0.6.0"  # Required for image processing
+    - "timm>=0.9.0"  # Required by ai-toolkit models
+    - "toml>=0.10.0"  # Required for configuration
+    - "python-slugify>=8.0.0"  # Required by ai-toolkit
+    
+    # Serialization and storage
+    - "safetensors>=0.4.0"
+    - "huggingface-hub>=0.17.0"
+    - "datasets>=2.14.0"
+    
+    # Configuration and utilities
+    - "pydantic>=2.0.0"
+    - "pyyaml>=6.0"
+    - "tqdm>=4.65.0"
+    - "omegaconf>=2.3.0"
+    
+    # Additional dependencies for ai-toolkit
+    - "oyaml>=1.0"
+    - "wandb>=0.15.0"
+    - "tensorboard>=2.14.0"
+    - "jsonschema>=4.17.0"
+    
+    # Optimization libraries
+    - "bitsandbytes>=0.41.0"
+    - "optimum>=1.14.0"
+    
+  # Build commands to set up the environment
+  run:
+    # Install additional requirements if needed
+    - "pip install oyaml"
+
+# Specify the training and prediction entry points
+train: "train.py:train"
+predict: "predict.py:Predictor"
+
+# Optional: specify image for faster builds (if you have a pre-built base image)
+# image: "your-registry/qwen-image-base:latest"
