@@ -30,6 +30,10 @@ class TrainingOutput(BaseModel):
 
 def train(
     dataset: Path = Input(description="Zip file containing training images and captions"),
+    train_placeholder_token: bool = Input(
+        default=False,
+        description="Enable zero-prior placeholder token training (default OFF)"
+    ),
     placeholder_token: str = Input(
         default="<zwx>", 
         description="Zero-prior placeholder token (use angle brackets for single-token encoding)"
@@ -131,7 +135,7 @@ def train(
                             "ema_decay": 0.99
                         },
                         # Zero-prior placeholder token settings
-                        "train_placeholder_token": True,
+                        "train_placeholder_token": train_placeholder_token,
                         "placeholder_token": placeholder_token,
                         "placeholder_init_std": placeholder_init_std
                     },
@@ -234,8 +238,9 @@ def train(
         # Create metadata
         metadata = {
             "base_model": "Qwen/Qwen-Image",
-            "placeholder_token": placeholder_token,
-            "placeholder_init_std": placeholder_init_std,
+            "train_placeholder_token": train_placeholder_token,
+            "placeholder_token": placeholder_token if train_placeholder_token else None,
+            "placeholder_init_std": placeholder_init_std if train_placeholder_token else None,
             "rank": rank,
             "training_steps": steps,
             "learning_rate": learning_rate,
@@ -246,14 +251,15 @@ def train(
         }
         
         # Try to get vocab size from tokenizer if possible
-        try:
-            from transformers import Qwen2Tokenizer
-            tokenizer = Qwen2Tokenizer.from_pretrained("Qwen/Qwen-Image", subfolder="tokenizer")
-            tokenizer.add_special_tokens({"additional_special_tokens": [placeholder_token]})
-            metadata["vocab_size"] = len(tokenizer)
-            metadata["placeholder_token_id"] = tokenizer.convert_tokens_to_ids(placeholder_token)
-        except Exception as e:
-            print(f"⚠ Could not determine vocab size: {e}")
+        if train_placeholder_token:
+            try:
+                from transformers import Qwen2Tokenizer
+                tokenizer = Qwen2Tokenizer.from_pretrained("Qwen/Qwen-Image", subfolder="tokenizer")
+                tokenizer.add_special_tokens({"additional_special_tokens": [placeholder_token]})
+                metadata["vocab_size"] = len(tokenizer)
+                metadata["placeholder_token_id"] = tokenizer.convert_tokens_to_ids(placeholder_token)
+            except Exception as e:
+                print(f"⚠ Could not determine vocab size: {e}")
         
         # Write metadata
         with open(weights_dir / "meta.json", 'w') as f:
