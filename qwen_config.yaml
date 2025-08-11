@@ -8,8 +8,8 @@ config:
       device: cuda:0
       network:
         type: "lora"
-        linear: 64
-        linear_alpha: 128
+        linear: 32
+        linear_alpha: 32
       save:
         dtype: float16
         save_every: 2000
@@ -17,6 +17,7 @@ config:
         push_to_hub: false
       datasets:
         - folder_path: "./zeke"
+          default_caption: "A photo of a man named zeke"
           caption_ext: "txt"
           caption_dropout_rate: 0.00
           shuffle_tokens: false
@@ -24,7 +25,7 @@ config:
           resolution: [512, 768, 1024]
       train:
         batch_size: 1
-        steps: 4000
+        steps: 2000
         gradient_accumulation_steps: 1
         train_unet: true
         train_text_encoder: false
@@ -48,7 +49,7 @@ config:
         width: 1024
         height: 1024
         prompts:
-          - "a photo of zwx"
+          - "A photo of a man named zeke"
         seed: 42
         walk_seed: true
         guidance_scale: 4
