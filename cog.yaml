@@ -1,18 +1,12 @@
 build:
-  # Use CUDA-enabled base image for GPU support
   gpu: true
   cuda: "12.1"
   python_version: "3.10"
-  
-  # Install system dependencies
   system_packages:
     - "libgl1-mesa-glx"
     - "libglib2.0-0"
     - "wget"
     - "git"
-  
-  # Install Python dependencies
   python_requirements: "ai-toolkit/requirements.txt"
 
-# Define the prediction interface
 predict: "predict.py:Predictor"

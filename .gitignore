@@ -1,1 +1,9 @@
 .venv/
+.cog/
+__pycache__/
+*.png
+digest.txt
+*_backup.py
+*_original.py
+/qwen_lora_package/*
+*.safetensors
