@@ -16,7 +16,6 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-.cog/
 build/
 develop-eggs/
 dist/
@@ -46,6 +45,7 @@ digest.txt
 *.log
 *.txt
 !requirements.txt
+!ai-toolkit/requirements.txt
 
 # Backup files
 *_backup.py

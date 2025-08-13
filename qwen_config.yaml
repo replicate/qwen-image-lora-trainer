@@ -16,20 +16,20 @@ config:
         max_step_saves_to_keep: 4
         push_to_hub: false
       datasets:
-        - folder_path: "./zeke"
+        - folder_path: "../zeke"
           default_caption: "A photo of a man named zeke"
           caption_ext: "txt"
           caption_dropout_rate: 0.00
           shuffle_tokens: false
           cache_latents_to_disk: true
-          resolution: [512, 768, 1024]
+          resolution: [512]
       train:
         batch_size: 1
-        steps: 2000
+        steps: 100
         gradient_accumulation_steps: 1
         train_unet: true
         train_text_encoder: false
-        gradient_checkpointing: false
+        gradient_checkpointing: true
         noise_scheduler: "flowmatch"
         optimizer: "adamw8bit"
         lr: 1e-4
@@ -42,12 +42,12 @@ config:
         arch: "qwen_image"
         quantize: false
         quantize_te: false
-        low_vram: false
+        low_vram: true
       sample:
         sampler: "flowmatch"
-        sample_every: 250
-        width: 1024
-        height: 1024
+        sample_every: 50
+        width: 512
+        height: 512
         prompts:
           - "A photo of a man named zeke"
         seed: 42
