@@ -27,9 +27,10 @@ from toolkit.config_modules import ModelConfig
 class Predictor(BasePredictor):
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
-        # Note: Defaults here target stability on tighter VRAM (A100). On H200,
+        # NOTE: Defaults here target stability on tighter VRAM (A100). On H200,
         # you can safely increase resolution/steps via inputs for quality/speed.
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        # A100: bf16 is stable. H200: bf16 or fp16 both fine; bf16 default.
         self.torch_dtype = torch.bfloat16
         self.lora_net = None  # Will be set when LoRA weights are loaded
         
@@ -42,6 +43,7 @@ class Predictor(BasePredictor):
             dtype="bf16"
         )
         
+        # NOTE: On H200, you can bump default sizes and steps in callers for speed/quality.
         self.qwen = QwenImageModel(
             device=self.device, 
             model_config=model_cfg, 

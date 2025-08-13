@@ -2,6 +2,11 @@
 """
 Cog trainer for Qwen Image LoRA training.
 Follows Flux training patterns but optimized for Qwen Image model.
+
+Notes on hardware profiles:
+- A100 (tight VRAM): favor stability — gradient_checkpointing=True, low_vram=True, resolution=512.
+- H200 (ample VRAM, speed first): prefer gradient_checkpointing=False, low_vram=False, use_ema=False,
+  resolution in {768, 1024}, and longer steps. The inputs below document these trade-offs inline.
 """
 
 import os
@@ -17,9 +22,8 @@ from typing import List, Optional, Dict, Any
 import logging
 
 # Set environment variables for optimal performance
-# NOTE: These defaults helped stabilize training on A100 (tighter VRAM).
-# On H200 (more VRAM) where speed is the priority, you generally don't need
-# extra allocator tricks; leaving this set is harmless but optional.
+# A100 profile: these defaults helped stabilize allocation under tighter VRAM.
+# H200 profile: speed-focused; allocator tweak is harmless but optional.
 os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -143,9 +147,9 @@ def create_training_config(
         sample_prompts = [default_caption]
     
     # A100 vs H200 guidance:
-    # - For A100: keep gradient_checkpointing=True, low_vram=True, resolution=512.
-    # - For H200 (speed focus): set gradient_checkpointing=False, low_vram=False,
-    #   use_ema=False, and prefer resolution=768 or 1024.
+    # - A100: gradient_checkpointing=True, low_vram=True, resolution=512.
+    # - H200 (speed): gradient_checkpointing=False, low_vram=False, use_ema=False,
+    #   resolution ∈ {768, 1024}. Prefer faster optimizer settings as needed.
     config = {
         "job": "extension",
         "config": {
@@ -204,7 +208,7 @@ def create_training_config(
                     "sampler": "flowmatch",
                     "sample_every": sample_every,
                     # A100: sampling at 512 keeps memory low.
-                    # H200: sampling at 768/1024 is fine if enabled.
+                    # H200: sampling at 768/1024 is fine if enabled. Set sample_every=0 for max speed.
                     "width": resolution,
                     "height": resolution,
                     "prompts": sample_prompts,
