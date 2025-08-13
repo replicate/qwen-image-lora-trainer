@@ -27,7 +27,8 @@ from toolkit.config_modules import ModelConfig
 class Predictor(BasePredictor):
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
-        
+        # Note: Defaults here target stability on tighter VRAM (A100). On H200,
+        # you can safely increase resolution/steps via inputs for quality/speed.
         self.device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self.torch_dtype = torch.bfloat16
         self.lora_net = None  # Will be set when LoRA weights are loaded
