@@ -7,3 +7,17 @@ digest.txt
 *_original.py
 /qwen_lora_package/*
 *.safetensors
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.flv
+*.wmv
+/zeke/*
+*.zip
