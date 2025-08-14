@@ -81,6 +81,8 @@ class Predictor(BasePredictor):
                 extracted_path = os.path.join(temp_dir, lora_filename)
                 
                 print(f"Extracted LoRA to: {extracted_path}")
+                # Track extraction root for cleanup
+                self._last_temp_extract_dir = temp_dir
                 return extracted_path
                 
         except zipfile.BadZipFile:
@@ -102,7 +104,7 @@ class Predictor(BasePredictor):
             if path_obj.suffix.lower() == '.zip':
                 # It's a zip file, extract the LoRA
                 actual_lora_path = self._extract_lora_from_zip(lora_path)
-                cleanup_path = os.path.dirname(actual_lora_path)  # Remember to cleanup temp dir
+                cleanup_path = getattr(self, "_last_temp_extract_dir", None)
             elif path_obj.suffix.lower() == '.safetensors':
                 # It's already a safetensors file
                 print("Direct safetensors file detected")
@@ -112,7 +114,7 @@ class Predictor(BasePredictor):
                     with zipfile.ZipFile(lora_path, 'r') as zipf:
                         # If this succeeds, it's a zip file
                         actual_lora_path = self._extract_lora_from_zip(lora_path)
-                        cleanup_path = os.path.dirname(actual_lora_path)
+                        cleanup_path = getattr(self, "_last_temp_extract_dir", None)
                 except zipfile.BadZipFile:
                     # Not a zip, assume it's a safetensors file
                     print("Assuming direct safetensors file")
@@ -132,9 +134,9 @@ class Predictor(BasePredictor):
                 lora_alpha = int(sd[alpha_key].item()) if alpha_key in sd else lora_dim
                 print(f"Detected LoRA config - dim: {lora_dim}, alpha: {lora_alpha}")
             else:
-                # Conservative defaults if we couldn't parse safetensors here
-                lora_dim = 32
-                lora_alpha = 32
+                # Use H200-optimized defaults if we couldn't parse safetensors
+                lora_dim = 16
+                lora_alpha = 16
                 print(f"Using default LoRA config - dim: {lora_dim}, alpha: {lora_alpha}")
             
             # Create LoRA network if not already created or if config changed
