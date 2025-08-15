@@ -1,11 +1,41 @@
-# Cog Docker ignore file
+# The .dockerignore file excludes files from the container build process.
+#
+# https://docs.docker.com/engine/reference/builder/#dockerignore-file
 
-# Output files and artifacts
+# Exclude Git files
+**/.git
+**/.github
+**/.gitignore
+
+# Exclude Python cache files
+__pycache__
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+# Exclude Python virtual environment
+/venv
+
+# Replicate
+/model_cache/*
 *.png
 *.jpg
 *.jpeg
 *.gif
 *.webp
+*.heic
+*.heif
+*.hevc
+*.h264
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.flv
+
+# Cog Docker ignore file
+
+# Output files and artifacts
 output/
 artifacts/
 experiments/

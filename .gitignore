@@ -21,3 +21,4 @@ digest.txt
 *.wmv
 /zeke/*
 *.zip
+/model_cache/*
