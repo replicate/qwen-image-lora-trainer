@@ -31,7 +31,7 @@ class Predictor(BasePredictor):
         print("Model loaded successfully!")
 
     def _load_lora_weights(self, lora_path: str, lora_scale: float) -> None:
-        # Handle ZIP or direct safetensors
+        # Extract from ZIP if needed
         if lora_path.endswith('.zip'):
             temp_dir = tempfile.mkdtemp()
             with zipfile.ZipFile(lora_path, 'r') as zipf:
@@ -42,42 +42,40 @@ class Predictor(BasePredictor):
             safetensors_path = lora_path
             temp_dir = None
         
-        # Load LoRA config
+        # Load LoRA config and weights
         try:
-            sd = load_file(safetensors_path)
-            sample_key = next(k for k in sd.keys() if ("lora_A" in k or "lora_down" in k))
-            lora_dim = sd[sample_key].shape[0]
+            weights = load_file(safetensors_path)
+            sample_key = next(k for k in weights.keys() if ("lora_A" in k or "lora_down" in k))
+            lora_dim = weights[sample_key].shape[0]
             alpha_key = sample_key.replace("lora_down", "alpha").replace("lora_A", "alpha")
-            lora_alpha = int(sd[alpha_key].item()) if alpha_key in sd else lora_dim
+            lora_alpha = int(weights[alpha_key].item()) if alpha_key in weights else lora_dim
         except:
-            lora_dim, lora_alpha = 32, 32  # Default
+            weights = safetensors_path  # Fallback to path-based loading
+            lora_dim, lora_alpha = 32, 32
         
         # Create LoRA network if needed
-        if (self.lora_net is None or self.lora_net.lora_dim != lora_dim or self.lora_net.alpha != lora_alpha):
+        if (self.lora_net is None or 
+            getattr(self.lora_net, 'lora_dim', None) != lora_dim or 
+            getattr(self.lora_net, 'alpha', None) != lora_alpha):
             self.lora_net = LoRASpecialNetwork(
-                text_encoder=self.qwen.text_encoder,
-                unet=self.qwen.unet,
-                lora_dim=lora_dim,
-                alpha=lora_alpha,
-                multiplier=lora_scale,
-                train_unet=True,
-                train_text_encoder=False,
-                is_transformer=True,
-                transformer_only=True,
-                base_model=self.qwen,
+                text_encoder=self.qwen.text_encoder, unet=self.qwen.unet,
+                lora_dim=lora_dim, alpha=lora_alpha, multiplier=lora_scale,
+                train_unet=True, train_text_encoder=False, is_transformer=True,
+                transformer_only=True, base_model=self.qwen,
                 target_lin_modules=["QwenImageTransformer2DModel"]
             )
-            self.lora_net.apply_to(self.qwen.text_encoder, self.qwen.unet, apply_text_encoder=False, apply_unet=True)
+            self.lora_net.apply_to(self.qwen.text_encoder, self.qwen.unet, 
+                                 apply_text_encoder=False, apply_unet=True)
             self.lora_net.force_to(self.qwen.device_torch, dtype=self.qwen.torch_dtype)
         
         # Load and activate
-        self.lora_net.load_weights(sd if 'sd' in locals() else safetensors_path)
+        self.lora_net.load_weights(weights)
         self.lora_net.is_active = True
         self.lora_net.multiplier = lora_scale
         self.lora_net._update_torch_multiplier()
         
         # Cleanup
-        if temp_dir and os.path.exists(temp_dir):
+        if temp_dir:
             shutil.rmtree(temp_dir)
         
         print(f"LoRA loaded: dim={lora_dim}, alpha={lora_alpha}, scale={lora_scale}")
