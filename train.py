@@ -21,6 +21,7 @@ os.environ["NCCL_ASYNC_ERROR_HANDLING"] = "1"
 
 sys.path.insert(0, "./ai-toolkit")
 from cog import Input, Path as CogPath
+from pydantic import BaseModel
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,6 +29,10 @@ logger = logging.getLogger(__name__)
 INPUT_DIR = Path("input_images")
 OUTPUT_DIR = Path("output")
 AI_TOOLKIT_PATH = Path("./ai-toolkit")
+
+
+class TrainingOutput(BaseModel):
+    weights: CogPath
 
 def clean_up():
     if INPUT_DIR.exists():
@@ -177,7 +182,7 @@ def train(
     batch_size: int = Input(default=1, description="Batch size", choices=[1, 2, 4]),
     optimizer: str = Input(default="adamw", description="Optimizer", choices=["adamw8bit", "adamw", "adam8bit", "prodigy"]),
     seed: Optional[int] = Input(default=None, description="Random seed for reproducible results (leave blank for random)")
-) -> CogPath:
+) -> TrainingOutput:
     """Train LoRA for Qwen Image - returns ZIP with lora.safetensors"""
     
     clean_up()
@@ -213,4 +218,4 @@ def train(
     if INPUT_DIR.exists():
         shutil.rmtree(INPUT_DIR)
     
-    return output_path
+    return TrainingOutput(weights=output_path)
