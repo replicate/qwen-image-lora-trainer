@@ -20,8 +20,7 @@ os.environ["CUDA_DEVICE_MAX_CONNECTIONS"] = "1"
 os.environ["NCCL_ASYNC_ERROR_HANDLING"] = "1"
 
 sys.path.insert(0, "./ai-toolkit")
-from cog import Input, Path as CogPath
-from pydantic import BaseModel
+from cog import BaseModel, Input, Path as CogPath
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
