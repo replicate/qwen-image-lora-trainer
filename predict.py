@@ -28,6 +28,7 @@ sys.path.insert(0, "./ai-toolkit")
 from extensions_built_in.diffusion_models.qwen_image import QwenImageModel
 from toolkit.lora_special import LoRASpecialNetwork
 from toolkit.config_modules import ModelConfig
+from helpers.billing.metrics import record_billing_metric
 
 
 def download_weights(url: str, dest: str) -> None:
@@ -152,6 +153,10 @@ class Predictor(BasePredictor):
         replicate_weights: Optional[Path] = Input(description="LoRA weights (.safetensors or .zip)", default=None),
         lora_scale: float = Input(description="LoRA strength", default=1.0, ge=0.0, le=3.0)
     ) -> Path:
+        """Generate an image based on the provided prompt and parameters."""
+        # Record billing metric at the start (before any processing that might fail)
+        record_billing_metric("image_output_count", 1)
+        
         # Fast mode optimization
         if go_fast and num_inference_steps > 28:
             num_inference_steps = 28
