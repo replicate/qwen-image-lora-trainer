@@ -57,7 +57,6 @@ class Predictor(BasePredictor):
 
         # Download model weights if not already present
         model_files = [
-            ".locks.tar",
             "models--Qwen--Qwen-Image.tar",
             "xet.tar",
         ]
@@ -191,6 +190,9 @@ class Predictor(BasePredictor):
         # Generate
         print(f"Generating: {prompt} ({width}x{height}, steps={num_inference_steps}, seed={seed})")
         
+        import time
+        prediction_start = time.time()
+        
         gen_cfg = type("Gen", (), {
             "width": width, "height": height, "guidance_scale": guidance,
             "num_inference_steps": num_inference_steps, "latents": None, "ctrl_img": None
@@ -202,6 +204,9 @@ class Predictor(BasePredictor):
         
         img = self.qwen.generate_single_image(self.pipe, gen_cfg, cond, uncond, generator, extra={})
         
+        prediction_end = time.time()
+        prediction_time = prediction_end - prediction_start
+        
         # Save
         output_path = f"/tmp/output.{output_format}"
         save_kwargs = {"quality": output_quality} if output_format in ("jpg", "webp") else {}
@@ -209,5 +214,6 @@ class Predictor(BasePredictor):
             save_kwargs["optimize"] = True
         img.save(output_path, **save_kwargs)
         
+        print(f"PREDICTION_TIME: {prediction_time:.2f} seconds")
         print(f"Generated: {output_path}")
         return Path(output_path)

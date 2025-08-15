@@ -175,9 +175,9 @@ def create_output_archive(job_name: str, settings: Dict[str, Any]) -> CogPath:
 def train(
     dataset: CogPath = Input(description="ZIP file with training images and optional .txt captions"),
     steps: int = Input(default=1000, description="Training steps", ge=100, le=6000),
-    learning_rate: float = Input(default=1e-4, description="Learning rate", ge=1e-5, le=1e-3),
-    lora_rank: int = Input(default=32, description="LoRA rank", ge=8, le=128),
-    default_caption: str = Input(default="A photo of a man named zeke", description="Caption for images without matching .txt files"),
+    learning_rate: float = Input(default=2e-4, description="Learning rate", ge=1e-5, le=1e-3),
+    lora_rank: int = Input(default=64, description="LoRA rank", ge=8, le=128),
+    default_caption: str = Input(default="A photo of a person named <>", description="Caption for images without matching .txt files. CRITICAL: Qwen is extremely sensitive to prompting and differs from other image models. Do NOT use abstract tokens like 'TOK', 'sks', or meaningless identifiers. Instead, use descriptive, familiar words that closely match your actual images (e.g., 'person', 'man', 'woman', 'dog', 'cat', 'building', 'car'). Every token carries meaning - the model learns by overriding specific descriptive concepts rather than learning new tokens. Be precise and descriptive about what's actually in your images. The model excels at composition and will follow detailed instructions exactly."),
     batch_size: int = Input(default=1, description="Batch size", choices=[1, 2, 4]),
     optimizer: str = Input(default="adamw", description="Optimizer", choices=["adamw8bit", "adamw", "adam8bit", "prodigy"]),
     seed: Optional[int] = Input(default=None, description="Random seed for reproducible results (leave blank for random)")
