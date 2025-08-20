@@ -166,11 +166,17 @@ class Predictor(BasePredictor):
         
         width, height = dims.get(aspect_ratio, (1328, 1328))
         
-        # Ensure dimensions are divisible by 16 (model requirement)
-        width = (width // 16) * 16
-        height = (height // 16) * 16
+        # Our dimensions are already divisible by 16, but let's keep this for safety
+        # in case someone modifies the dimensions above
+        adjusted_width = (width // 16) * 16
+        adjusted_height = (height // 16) * 16
         
-        return width, height
+        # Log if adjustment was needed (shouldn't happen with our current dimensions)
+        if adjusted_width != width or adjusted_height != height:
+            print(f"`height` and `width` have to be divisible by 16 but are {width} and {height}.")
+            print(f"Dimensions will be resized to {adjusted_width}x{adjusted_height}")
+        
+        return adjusted_width, adjusted_height
 
     def predict(
         self,
@@ -220,11 +226,6 @@ class Predictor(BasePredictor):
         
         # Get dimensions based on aspect ratio and image size preset
         width, height = self._get_dimensions(aspect_ratio, image_size)
-        
-        # Log if dimensions needed adjustment for divisibility by 16
-        requested_dims = self._get_dimensions(aspect_ratio, image_size)
-        if (requested_dims[0] != width or requested_dims[1] != height):
-            print(f"`height` and `width` have to be divisible by 16. Dimensions adjusted to {width}x{height}")
         
         # Enhance prompt if requested
         if enhance_prompt:
