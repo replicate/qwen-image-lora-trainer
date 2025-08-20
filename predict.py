@@ -258,9 +258,6 @@ class Predictor(BasePredictor):
         )
     ) -> Path:
         """Run a single prediction on the model"""
-        # Record billing metric at start so users are always charged
-        record_billing_metric("image_output_count", 1)
-        
         # Determine dimensions with smart handling
         if width is not None and height is not None:
             # User provided explicit dimensions - validate and adjust if needed
@@ -342,6 +339,9 @@ class Predictor(BasePredictor):
         if output_format == "jpg":
             save_kwargs["optimize"] = True
         img.save(output_path, **save_kwargs)
+        
+        # Record billing metric after successful image generation
+        record_billing_metric("image_output_count", 1)
         
         print(f"Generation took {prediction_time:.2f} seconds")
         print(f"Total safe images: 1/1")
