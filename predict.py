@@ -134,16 +134,59 @@ class Predictor(BasePredictor):
         
         print(f"LoRA loaded: dim={lora_dim}, alpha={lora_alpha}, scale={lora_scale}")
 
+    def _get_dimensions(self, aspect_ratio: str, image_size: str) -> tuple:
+        """Get dimensions based on aspect ratio and image size preset, matching Pruna's approach"""
+        
+        # Pruna-style dimensions for optimize_for_quality (~1.5-1.7 MP)
+        quality_dims = {
+            "1:1": (1328, 1328),
+            "16:9": (1664, 928),
+            "9:16": (928, 1664),
+            "4:3": (1472, 1136),
+            "3:4": (1136, 1472),
+            "3:2": (1536, 1024),
+            "2:3": (1024, 1536),
+        }
+        
+        # Speed dimensions (~45% of quality, ~0.7-0.8 MP)
+        speed_dims = {
+            "1:1": (896, 896),
+            "16:9": (1120, 624),
+            "9:16": (624, 1120),
+            "4:3": (992, 768),
+            "3:4": (768, 992),
+            "3:2": (1024, 688),
+            "2:3": (688, 1024),
+        }
+        
+        if image_size == "optimize_for_quality":
+            dims = quality_dims
+        else:  # optimize_for_speed
+            dims = speed_dims
+        
+        width, height = dims.get(aspect_ratio, (1328, 1328))
+        
+        # Ensure dimensions are divisible by 16 (model requirement)
+        width = (width // 16) * 16
+        height = (height // 16) * 16
+        
+        return width, height
 
     def predict(
         self,
         prompt: str = Input(description="Prompt for generated image", default="A beautiful sunset over mountains"),
         enhance_prompt: bool = Input(description="Enhance the prompt with positive magic", default=False),
         negative_prompt: str = Input(description="Negative prompt for generated image", default=""),
-        aspect_ratio: str = Input(description="Aspect ratio", choices=["1:1", "16:9", "9:16", "4:3", "3:4"], default="16:9"),
-        image_size: str = Input(description="Image size preset", choices=["optimize_for_quality", "optimize_for_speed"], default="optimize_for_quality"),
-        width: int = Input(description="Width (overrides aspect_ratio/image_size)", default=512, ge=256, le=1024),
-        height: int = Input(description="Height (overrides aspect_ratio/image_size)", default=512, ge=256, le=1024),
+        aspect_ratio: str = Input(
+            description="Aspect ratio for the generated image",
+            choices=["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"],
+            default="16:9"
+        ),
+        image_size: str = Input(
+            description="Image size preset",
+            choices=["optimize_for_quality", "optimize_for_speed"],
+            default="optimize_for_quality"
+        ),
         go_fast: bool = Input(description="Run faster with minor optimizations", default=False),
         num_inference_steps: int = Input(description="Number of denoising steps", default=50, ge=1, le=50),
         guidance: float = Input(description="Guidance scale", default=4.0, ge=0.0, le=10.0),
@@ -168,25 +211,20 @@ class Predictor(BasePredictor):
             self.lora_net.is_active = False
             self.lora_net._update_torch_multiplier()
         
-        # Set seed
+        # Set seed - if None, generate random seed and log it
         if seed is None:
             seed = torch.randint(0, 2**32 - 1, (1,)).item()
+            print(f"Using random seed: {seed}")
+        else:
+            print(f"Using seed: {seed}")
         
-        # Calculate dimensions
-        if width == 512 and height == 512:
-            long_side = 1024 if image_size == "optimize_for_quality" else 512
-            if aspect_ratio == "1:1":
-                width, height = long_side, long_side
-            elif aspect_ratio == "16:9":
-                width, height = long_side, int(long_side * 9 / 16)
-            elif aspect_ratio == "9:16":
-                width, height = int(long_side * 9 / 16), long_side
-            elif aspect_ratio == "4:3":
-                width, height = long_side, int(long_side * 3 / 4)
-            elif aspect_ratio == "3:4":
-                width, height = int(long_side * 3 / 4), long_side
-            width = max(256, min(1024, width))
-            height = max(256, min(1024, height))
+        # Get dimensions based on aspect ratio and image size preset
+        width, height = self._get_dimensions(aspect_ratio, image_size)
+        
+        # Log if dimensions needed adjustment for divisibility by 16
+        requested_dims = self._get_dimensions(aspect_ratio, image_size)
+        if (requested_dims[0] != width or requested_dims[1] != height):
+            print(f"`height` and `width` have to be divisible by 16. Dimensions adjusted to {width}x{height}")
         
         # Enhance prompt if requested
         if enhance_prompt:
@@ -219,6 +257,7 @@ class Predictor(BasePredictor):
             save_kwargs["optimize"] = True
         img.save(output_path, **save_kwargs)
         
-        print(f"PREDICTION_TIME: {prediction_time:.2f} seconds")
+        print(f"Generation took {prediction_time:.2f} seconds")
+        print(f"Total safe images: 1 out of 1")  # Match Pruna's logging style
         print(f"Generated: {output_path}")
         return Path(output_path)
