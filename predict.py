@@ -2,6 +2,7 @@
 """Qwen Image predictor with LoRA support"""
 
 import os
+from pathlib import Path
 import subprocess
 import time
 
@@ -185,7 +186,7 @@ class Predictor(BasePredictor):
             description="The main prompt for image generation"
         ),
         enhance_prompt: bool = Input(
-            default=True,
+            default=False,
             description="Automatically enhance the prompt for better image generation"
         ),
         negative_prompt: str = Input(
@@ -193,7 +194,7 @@ class Predictor(BasePredictor):
             description="Things you do not want to see in your image"
         ),
         aspect_ratio: str = Input(
-            default="1:1",
+            default="16:9",
             choices=["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"],
             description="Aspect ratio for the generated image. Ignored if width and height are both provided."
         ),
@@ -219,13 +220,13 @@ class Predictor(BasePredictor):
             description="Use LCM-LoRA to accelerate image generation (trades quality for 8x speed)"
         ),
         num_inference_steps: int = Input(
-            default=None,
+            default=50,
             ge=1,
             le=50,
             description="Number of denoising steps. More steps = higher quality. Defaults to 4 if go_fast, else 28."
         ),
         guidance: float = Input(
-            default=None,
+            default=4.0,
             ge=1,
             le=10,
             description="Guidance scale for image generation. Defaults to 1 if go_fast, else 3.5."
@@ -240,19 +241,19 @@ class Predictor(BasePredictor):
             description="Format of the output images"
         ),
         output_quality: int = Input(
-            default=90,
+            default=80,
             ge=0,
             le=100,
             description="Quality when saving images (0-100, higher is better, 100 = lossless)"
         ),
-        replicate_weights: str = Input(
+        replicate_weights: Optional[Path] = Input(
             default=None,
             description="Path to LoRA weights file. Leave blank to use base model."
         ),
         lora_scale: float = Input(
-            default=0.85,
+            default=1.0,
             ge=0,
-            le=1,
+            le=3,
             description="Scale for LoRA weights (0 = base model, 1 = full LoRA)"
         )
     ):
@@ -288,12 +289,11 @@ class Predictor(BasePredictor):
             mode_name = "quality" if image_size == "optimize_for_quality" else "speed"
             print(f"📐 Using {mode_name} preset for {aspect_ratio}: {width}x{height}")
 
-        # Set guidance and steps based on go_fast
-        if num_inference_steps is None:
-            num_inference_steps = 4 if go_fast else 28
+        # Override steps for go_fast mode
+        if go_fast and num_inference_steps > 28:
+            num_inference_steps = 28
         
-        if guidance is None:
-            guidance = 1.0 if go_fast else 3.5
+        # guidance is already set via default parameter
         
         # Load LoRA if provided
         if replicate_weights:
