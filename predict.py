@@ -148,15 +148,15 @@ class Predictor(BasePredictor):
             "2:3": (1024, 1536),
         }
         
-        # Speed dimensions (~45% of quality, ~0.7-0.8 MP)
+        # Speed dimensions (actual Pruna dimensions from testing)
         speed_dims = {
-            "1:1": (896, 896),
-            "16:9": (1120, 624),
-            "9:16": (624, 1120),
-            "4:3": (992, 768),
-            "3:4": (768, 992),
-            "3:2": (1024, 688),
-            "2:3": (688, 1024),
+            "1:1": (1024, 1024),
+            "16:9": (1024, 576),
+            "9:16": (576, 1280),  # Note: 576x1280, not 576x1024
+            "4:3": (1024, 768),
+            "3:4": (768, 1024),
+            "3:2": (1152, 768),
+            "2:3": (768, 1152),
         }
         
         if image_size == "optimize_for_quality":
@@ -177,6 +177,7 @@ class Predictor(BasePredictor):
             print(f"Dimensions will be resized to {adjusted_width}x{adjusted_height}")
         
         return adjusted_width, adjusted_height
+
 
     def predict(
         self,
