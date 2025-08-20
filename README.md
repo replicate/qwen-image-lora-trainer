@@ -1,21 +1,60 @@
 
-## setup
-- `git submodule update --init --recursive`
-- `pip install -r ai-toolkit/requirements.txt` (maybe in a venv)
-- `unzip zeke.zip`, delete all .txt files in here if any exist
+# Qwen Image LoRA
 
-## To launch training
-- adjust `dataset.folder_path` in `qwen_config.yaml` to point to the zeke dataset
-- cd to `ai-toolkit` and run `python run.py ../qwen_config.yaml`
+[![Replicate](https://replicate.com/qwen/qwen-image-lora/badge)](https://replicate.com/qwen/qwen-image-lora)
 
-## To run inference with trained LoRA weights
-- adjust `LORA_FILE_PATH` in `qwen_lora_inference.py` to point to the LoRA weights
-- run `python qwen_lora_inference.py`
+Fine-tunable Qwen Image model with exceptional composition abilities. Train custom LoRAs for any style or subject.
 
-## Cog inference (Replicate-style)
+## Training
+
+Train your own LoRA on [Replicate](https://replicate.com/qwen/qwen-image-lora/train) or locally:
+
 ```bash
-cog predict -i prompt="A beautiful sunset" -i aspect_ratio="16:9" -i image_size="optimize_for_quality"
+cog train -i dataset=@your-images.zip -i default_caption="A photo of a person named <>"
 ```
 
-Aspect ratios: `1:1`, `16:9`, `9:16`, `4:3`, `3:4`, `3:2`, `2:3`  
-Image sizes: `optimize_for_quality` (~1.5MP), `optimize_for_speed` (~0.8MP)
+Training runs on Nvidia H100 GPU hardware and outputs a ZIP file with your LoRA weights.
+
+## Inference
+
+Generate images using your trained LoRA:
+
+```bash
+cog predict -i prompt="A beautiful sunset" -i replicate_weights=@your-trained-lora.zip
+```
+
+## Local Development
+
+```bash
+git clone --recursive https://github.com/your-repo/qwen-image-lora-trainer.git
+cd qwen-image-lora-trainer
+```
+
+Then use `cog train` and `cog predict` as shown above.
+
+## Dataset Format
+
+Your training ZIP should contain images (`.jpg`, `.png`, `.webp`) and optionally matching `.txt` caption files:
+
+```
+dataset.zip
+├── photo1.jpg
+├── photo1.txt        # "A photo of a person named <>"
+├── photo2.jpg
+└── photo3.jpg        # Will use default_caption
+```
+
+## Important: Qwen Prompting
+
+**Critical**: Qwen is extremely sensitive to prompting and differs from other image models. Do NOT use abstract tokens like "TOK", "sks", or meaningless identifiers. 
+
+Instead, use descriptive, familiar words that closely match your actual images:
+- ✅ "person", "man", "woman", "dog", "cat", "building", "car"  
+- ❌ "TOK", "sks", "subj", random tokens
+
+Every token carries meaning - the model learns by overriding specific descriptive concepts rather than learning new tokens. Be precise and descriptive about what's actually in your images.
+
+## Notes
+
+- Training typically takes 15-30 minutes depending on dataset size
+- Runs on Nvidia H100 GPU hardware on Replicate
