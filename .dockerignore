@@ -1,0 +1,98 @@
+# The .dockerignore file excludes files from the container build process.
+#
+# https://docs.docker.com/engine/reference/builder/#dockerignore-file
+
+# Exclude Git files
+**/.git
+**/.github
+**/.gitignore
+
+# Exclude Python cache files
+__pycache__
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+# Exclude Python virtual environment
+/venv
+
+# Replicate
+/model_cache/*
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.heic
+*.heif
+*.hevc
+*.h264
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.flv
+
+# Cog Docker ignore file
+
+# Output files and artifacts
+output/
+artifacts/
+experiments/
+
+# Cache and temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Documentation and guides (keep lean)
+*.md
+!README.md
+
+# Git files
+.git/
+.gitignore
+
+# Training outputs and logs
+digest.txt
+*.log
+*.txt
+!requirements.txt
+!ai-toolkit/requirements.txt
+
+# Backup files
+*_backup.py
+*_original.py
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large model files (will be downloaded)
+*.safetensors
+*.bin
+*.ckpt

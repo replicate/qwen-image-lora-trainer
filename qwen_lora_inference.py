@@ -10,7 +10,7 @@ from toolkit.lora_special import LoRASpecialNetwork
 from toolkit.config_modules import ModelConfig
 
 # Adjust this
-LORA_FILE_PATH = "/path/to/qwen_lora_v1.safetensors"
+LORA_FILE_PATH = "qwen_lora_v1.safetensors"
 
 def main():
   device = "cuda:0"
@@ -57,7 +57,7 @@ def main():
   pipe = qwen.get_generation_pipeline()
 
   # 7) Generate
-  prompt = "a photo of zeke sitting in a chair"
+  prompt = "a photo of a man named zeke"
   gen_cfg = type("Gen", (), dict(width=1024, height=1024, guidance_scale=4.0,
                                  num_inference_steps=20, latents=None, ctrl_img=None))()
   g = torch.Generator(device=qwen.device_torch).manual_seed(42)
@@ -66,7 +66,7 @@ def main():
   img = qwen.generate_single_image(pipe, gen_cfg, cond, uncond, g, extra={})
 
   # 8) Save
-  img.save("zeke.png")
+  img.save("zeke_with_lora.png")
 
 if __name__ == "__main__":
   main()

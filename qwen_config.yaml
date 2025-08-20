@@ -21,21 +21,21 @@ config:
           caption_ext: "txt"
           caption_dropout_rate: 0.00
           shuffle_tokens: false
-          cache_latents_to_disk: true
+          cache_latents_to_disk: false
           resolution: [512, 768, 1024]
       train:
         batch_size: 1
         steps: 2000
-        gradient_accumulation_steps: 1
+        gradient_accumulation_steps: 2
         train_unet: true
         train_text_encoder: false
         gradient_checkpointing: false
         noise_scheduler: "flowmatch"
-        optimizer: "adamw8bit"
+        optimizer: "adamw"
         lr: 1e-4
         dtype: bf16
         ema_config:
-          use_ema: true
+          use_ema: false
           ema_decay: 0.99
       model:
         name_or_path: "Qwen/Qwen-Image"
@@ -45,7 +45,7 @@ config:
         low_vram: false
       sample:
         sampler: "flowmatch"
-        sample_every: 250
+        sample_every: 0
         width: 1024
         height: 1024
         prompts:
