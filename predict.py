@@ -221,13 +221,13 @@ class Predictor(BasePredictor):
         ),
         num_inference_steps: int = Input(
             default=50,
-            ge=1,
+            ge=0.0,
             le=50,
             description="Number of denoising steps. More steps = higher quality. Defaults to 4 if go_fast, else 28."
         ),
         guidance: float = Input(
             default=4.0,
-            ge=1,
+            ge=0.0,
             le=10,
             description="Guidance scale for image generation. Defaults to 1 if go_fast, else 3.5."
         ),
