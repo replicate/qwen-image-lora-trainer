@@ -101,33 +101,42 @@ def create_training_config(job_name: str, steps: int, learning_rate: float, lora
                 "datasets": [{
                     "folder_path": f"/src/{INPUT_DIR}", "default_caption": default_caption, "caption_ext": "txt",
                     "caption_dropout_rate": 0.0, "shuffle_tokens": False, "cache_latents_to_disk": False,
-                    "resolution": [512, 768, 1024]
+                    "resolution": [512, 768, 1024], "pin_memory": True, "num_workers": 4
                 }],
                 "train": {
-                    "batch_size": batch_size, "gradient_accumulation_steps": 1, "steps": steps,
-                    "lr": learning_rate, "optimizer": optimizer, "lr_scheduler": "cosine",
-                    "lr_scheduler_params": {"alpha": 0.75, "warmup": 0.01, "steps": steps},
-                    "tf32": True, "skip_epoch": 0, "dtype": "bf16",
-                    "max_grad_norm": 1.0, "gradient_checkpointing": True
+                    "batch_size": batch_size, "steps": steps, "gradient_accumulation_steps": 2,
+                    "train_unet": True, "train_text_encoder": False, "gradient_checkpointing": False,
+                    "noise_scheduler": "flowmatch", "optimizer": optimizer, "lr": learning_rate,
+                    "dtype": "bf16", "max_grad_norm": 1.0, "seed": seed or 42,
+                    "ema_config": {"use_ema": False, "ema_decay": 0.99}
                 },
-                "model": {
-                    "name_or_path": "Qwen/Qwen2-VL-2B-Instruct", "quantize": False,
-                    "transformer_layers_to_train": [24, 25, 26, 27]
-                },
-                "seed": seed if seed is not None else None,
-                "sample": {"sampler": "rectified_flow", "sample_every": 25000, "width": 1024, "height": 1024, "seed": 42}
-            }]
+                "model": {"name_or_path": "Qwen/Qwen-Image", "arch": "qwen_image", "quantize": False, "quantize_te": False, "low_vram": False},
+                "sample": {"sample_every": 0}
+            }],
+            "meta": {"name": "[name]", "version": "1.0"}
         }
     }
 
 
-def run_training(config: Dict[str, Any], job_name: str):
-    config_path = f"/tmp/{job_name}_config.yaml"
-    with open(config_path, 'w') as f:
-        yaml.dump(config, f)
+def run_training(config: Dict[str, Any], job_name: str) -> None:
+    job_dir = OUTPUT_DIR / job_name
+    job_dir.mkdir(parents=True, exist_ok=True)
+    config_path = job_dir / "config.yaml"
     
-    cmd = ["python", str(AI_TOOLKIT_PATH / "run.py"), config_path]
-    subprocess.run(cmd, check=True)
+    with open(config_path, 'w') as f:
+        yaml.dump(config, f, default_flow_style=False, indent=2)
+    
+    env = os.environ.copy()
+    env.update({
+        "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True,max_split_size_mb:512",
+        "CUDA_DEVICE_MAX_CONNECTIONS": "1",
+        "NCCL_ASYNC_ERROR_HANDLING": "1"
+    })
+    
+    logger.info(f"Starting training: {job_name}")
+    subprocess.run([sys.executable, "run.py", str(config_path.absolute())], 
+                   cwd=str(AI_TOOLKIT_PATH), env=env, check=True)
+    logger.info("Training completed")
 
 
 def create_output_archive(job_name: str, settings: Dict[str, Any]) -> CogPath:
@@ -154,6 +163,7 @@ def create_output_archive(job_name: str, settings: Dict[str, Any]) -> CogPath:
     except Exception as e:
         logger.warning(f"Unexpected error during LoRA conversion: {e}")
         # Continue anyway - better to return the file than fail completely
+
     
     # Create settings file
     settings_path = job_dir / "settings.txt"
