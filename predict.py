@@ -256,7 +256,7 @@ class Predictor(BasePredictor):
             le=3,
             description="Scale for LoRA weights (0 = base model, 1 = full LoRA)"
         )
-    ):
+    ) -> Path:
         """Run a single prediction on the model"""
         # Determine dimensions with smart handling
         if width is not None and height is not None:
