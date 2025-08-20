@@ -340,6 +340,9 @@ class Predictor(BasePredictor):
             save_kwargs["optimize"] = True
         img.save(output_path, **save_kwargs)
         
+        # Record billing metric after successful image generation
+        record_billing_metric("image_output_count", 1)
+        
         print(f"Generation took {prediction_time:.2f} seconds")
         print(f"Total safe images: 1/1")
         
