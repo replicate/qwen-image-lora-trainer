@@ -22,6 +22,9 @@ os.environ["NCCL_ASYNC_ERROR_HANDLING"] = "1"
 sys.path.insert(0, "./ai-toolkit")
 from cog import BaseModel, Input, Path as CogPath
 
+# Import safetensor conversion utility
+from safetensor_utils import rename_lora_keys_for_pruna, RenameError
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -144,6 +147,23 @@ def create_output_archive(job_name: str, settings: Dict[str, Any]) -> CogPath:
     standard_lora_path = job_dir / "lora.safetensors"
     if lora_file != standard_lora_path:
         lora_file.rename(standard_lora_path)
+    
+    # Apply safetensor conversion for Pruna compatibility
+    logger.info("Converting LoRA keys for Pruna compatibility...")
+    try:
+        conversion_result = rename_lora_keys_for_pruna(
+            src_path=str(standard_lora_path),
+            out_path=None,  # Overwrite in place
+            dry_run=False
+        )
+        logger.info(f"Conversion complete: {conversion_result['num_renamed']} keys renamed")
+    except RenameError as e:
+        logger.warning(f"LoRA key conversion failed: {e}")
+        # Continue anyway - the file might already be in the correct format
+    except Exception as e:
+        logger.warning(f"Unexpected error during LoRA conversion: {e}")
+        # Continue anyway - better to return the file than fail completely
+
     
     # Create settings file
     settings_path = job_dir / "settings.txt"

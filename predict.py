@@ -203,13 +203,13 @@ class Predictor(BasePredictor):
             choices=["optimize_for_quality", "optimize_for_speed"],
             description="Image size preset (quality = larger, speed = faster). Ignored if width and height are both provided."
         ),
-        width: int = Input(
+        width: Optional[int] = Input(
             default=None,
             ge=512,
             le=2048,
             description="Custom width in pixels. Provide both width and height for custom dimensions (overrides aspect_ratio/image_size)."
         ),
-        height: int = Input(
+        height: Optional[int] = Input(
             default=None,
             ge=512,
             le=2048,
