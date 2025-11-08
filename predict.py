@@ -356,7 +356,7 @@ class Predictor(BasePredictor):
             base_tensor = load_image_tensor(image_path, chosen_width, chosen_height)
             latents = self.qwen.encode_images([base_tensor]).to(self.qwen.device_torch, dtype=self.qwen.torch_dtype)
             if strength > 0:
-                noise = torch.randn_like(latents, generator=generator)
+                noise = torch.randn(latents.shape, device=latents.device, dtype=latents.dtype, generator=generator)
                 latents_override = torch.lerp(latents, noise, strength)
             else:
                 latents_override = latents
