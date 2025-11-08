@@ -22,3 +22,4 @@ digest.txt
 /zeke/*
 *.zip
 /model_cache/*
+output/
