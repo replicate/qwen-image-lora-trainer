@@ -8,7 +8,7 @@ build:
     - "wget"
     - "git"
     - "unzip"
-  python_requirements: "ai-toolkit/requirements.txt"
+  python_requirements: "requirements.txt"
 
   run:
     - curl -o /usr/local/bin/pget -L "https://github.com/replicate/pget/releases/latest/download/pget_$(uname -s)_$(uname -m)"

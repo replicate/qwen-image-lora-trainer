@@ -1,0 +1,2 @@
+-r ai-toolkit/requirements.txt
+pydantic<2.12.0
